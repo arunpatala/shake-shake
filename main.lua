@@ -87,8 +87,8 @@ for epoch = startEpoch, opt.nEpochs do
       trainLoss = trainLoss,
    }
    ------Shake-Shake------
-
-   checkpoints.save(epoch, model, trainer.optimState, bestModel, opt)
+   -- Running out of cuda memory ??
+   --checkpoints.save(epoch, model, trainer.optimState, bestModel, opt)
 end
 
 print(string.format(' * Finished top1: %6.3f  top5: %6.3f', bestTop1, bestTop5))
