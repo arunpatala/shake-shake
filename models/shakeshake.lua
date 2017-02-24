@@ -76,7 +76,23 @@ local function createModel(opt)
       model:add(nn.Linear(64*k, 10))
 
    elseif opt.dataset == 'cifar100' then
-      error('Cifar100 is not yet implemented with Shake-Shake')
+      -- Model type specifies number of layers for CIFAR-100 model
+      assert((depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110, 1202')
+      local n = (depth - 2) / 6
+      iChannels = 16
+      print(' | ResNet-' .. depth .. ' CIFAR-100')
+
+      -- The ResNet CIFAR-100 model
+      model:add(Convolution(3,16,3,3,1,1,1,1))
+      model:add(ShareGradInput(SBatchNorm(16), 'first'))
+      model:add(layer(nn.ShakeShakeBlock, 16, 16*k, n, 1, forwardShake, backwardShake, shakeImage, batchSize))
+      model:add(layer(nn.ShakeShakeBlock, 16*k, 32*k, n, 2, forwardShake, backwardShake, shakeImage, batchSize))
+      model:add(layer(nn.ShakeShakeBlock, 32*k, 64*k, n, 2, forwardShake, backwardShake, shakeImage, batchSize))
+      model:add(ReLU(true))
+      model:add(Avg(8, 8, 1, 1))
+      model:add(nn.View(64*k):setNumInputDims(3))
+      model:add(nn.Linear(64*k, 100))
+
    else
       error('invalid dataset: ' .. opt.dataset)
    end
